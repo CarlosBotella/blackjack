@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class Deck : MonoBehaviour
@@ -11,9 +13,12 @@ public class Deck : MonoBehaviour
     public Button playAgainButton;
     public Text finalMessage;
     public Text probMessage;
+    public Text PPoints;
+    public Text DPoints;
 
     public int[] values = new int[52];
-    int cardIndex = 0;    
+    int cardIndex = 0;
+    private int sum = 0;
        
     private void Awake()
     {    
@@ -29,16 +34,56 @@ public class Deck : MonoBehaviour
 
     private void InitCardValues()
     {
-        /*TODO:
+        List<int> values2 = new List<int>();;
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 9; j++)
+            {
+                values2.Add(j + 1);
+            }
+
+            for (int k = 0; k < 4; k++)
+            {
+                values2.Add(10);
+            }
+        }
+
+        values = values2.ToArray();
+        
+        for (int a = 0; a < faces.Length; a++)
+        {
+            if ((a == 0) || (a % 13 == 0))
+            {
+                values[a] = 11;
+            }
+
+        }
+        /*
          * Asignar un valor a cada una de las 52 cartas del atributo "values".
          * En principio, la posición de cada valor se deberá corresponder con la posición de faces. 
          * Por ejemplo, si en faces[1] hay un 2 de corazones, en values[1] debería haber un 2.
          */
+
+        
     }
 
     private void ShuffleCards()
     {
-        /*TODO:
+        Sprite tempf;
+        int tempval;
+        int randomIndex;
+        for (int i = 0; i < faces.Length; i++)
+        {
+            randomIndex = Random.Range(0, faces.Length);
+            tempf = faces[i];
+            tempval = values[i];
+            faces[i] = faces[randomIndex];
+            faces[randomIndex] = tempf;
+            values[i] = values[randomIndex];
+            values[randomIndex] = tempval;
+           
+        }
+        /*
          * Barajar las cartas aleatoriamente.
          * El método Random.Range(0,n), devuelve un valor entre 0 y n-1
          * Si lo necesitas, puedes definir nuevos arrays.
@@ -54,6 +99,19 @@ public class Deck : MonoBehaviour
             /*TODO:
              * Si alguno de los dos obtiene Blackjack, termina el juego y mostramos mensaje
              */
+            
+        }
+        if (dealer.GetComponent<CardHand>().points == 21)
+        {
+            finalMessage.text = "JUGADOR PIERDE";
+            hitButton.interactable = false;
+            stickButton.interactable = false;
+        }
+        if (player.GetComponent<CardHand>().points == 21)
+        {
+            finalMessage.text = "JUGADOR GANA";
+            hitButton.interactable = false;
+            stickButton.interactable = false;
         }
     }
 
@@ -69,21 +127,26 @@ public class Deck : MonoBehaviour
 
     void PushDealer()
     {
-        /*TODO:
+        /*
          * Dependiendo de cómo se implemente ShuffleCards, es posible que haya que cambiar el índice.
          */
+        
         dealer.GetComponent<CardHand>().Push(faces[cardIndex],values[cardIndex]);
-        cardIndex++;        
+        cardIndex++;
     }
 
     void PushPlayer()
     {
-        /*TODO:
+        /*
          * Dependiendo de cómo se implemente ShuffleCards, es posible que haya que cambiar el índice.
          */
         player.GetComponent<CardHand>().Push(faces[cardIndex], values[cardIndex]/*,cardCopy*/);
         cardIndex++;
         CalculateProbabilities();
+        //TODO: quitar Log
+        PPoints.text = "Puntos jugador: "+player.GetComponent<CardHand>().points.ToString();
+
+
     }       
 
     public void Hit()
@@ -97,7 +160,20 @@ public class Deck : MonoBehaviour
 
         /*TODO:
          * Comprobamos si el jugador ya ha perdido y mostramos mensaje
-         */      
+         */
+
+        if (player.GetComponent<CardHand>().points > 21)
+        {
+            finalMessage.text = "JUGADOR PIERDE";
+            hitButton.interactable = false;
+            stickButton.interactable = false;
+        }
+        if (player.GetComponent<CardHand>().points == 21)
+        {
+            finalMessage.text = "JUGADOR GANA";
+            hitButton.interactable = false;
+            stickButton.interactable = false;
+        }
 
     }
 
@@ -111,8 +187,49 @@ public class Deck : MonoBehaviour
          * Repartimos cartas al dealer si tiene 16 puntos o menos
          * El dealer se planta al obtener 17 puntos o más
          * Mostramos el mensaje del que ha ganado
-         */                
-         
+         */
+        dealer.GetComponent<CardHand>().cards[0].GetComponent<CardModel>().ToggleFace(true);  
+        hitButton.interactable = false;
+        stickButton.interactable = false;
+        
+        while (dealer.GetComponent<CardHand>().points <= 16)
+        {
+            PushDealer();
+        }
+        
+        if (dealer.GetComponent<CardHand>().points > 21)
+        {
+            finalMessage.text = "JUGADOR GANA";
+            Debug.Log(1);
+        }
+        else
+        {
+            if (player.GetComponent<CardHand>().points == dealer.GetComponent<CardHand>().points)
+            {
+                finalMessage.text = "EMPATE";
+                Debug.Log(2);
+            }
+            else
+            {
+
+                if (player.GetComponent<CardHand>().points > dealer.GetComponent<CardHand>().points)
+                {
+                    finalMessage.text = "JUGADOR GANA";
+                    Debug.Log(3);
+                }
+                else
+                {
+                    finalMessage.text = "JUGADOR PIERDE";
+                    Debug.Log(4);
+                }
+            }
+        }
+
+        
+        
+        
+        DPoints.text = "Puntos dealer: "+dealer.GetComponent<CardHand>().points.ToString();
+
     }
 
     public void PlayAgain()
@@ -120,6 +237,8 @@ public class Deck : MonoBehaviour
         hitButton.interactable = true;
         stickButton.interactable = true;
         finalMessage.text = "";
+        PPoints.text = "";
+        DPoints.text = "";
         player.GetComponent<CardHand>().Clear();
         dealer.GetComponent<CardHand>().Clear();          
         cardIndex = 0;
