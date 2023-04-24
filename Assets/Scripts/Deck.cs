@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.UI;
+using UnityEngine.XR.LegacyInputHelpers;
 using Random = UnityEngine.Random;
 
 public class Deck : MonoBehaviour
@@ -20,6 +21,9 @@ public class Deck : MonoBehaviour
     public Text probMessage;
     public Text PPoints;
     public Text DPoints;
+    public Text TextProb3;
+    public Text TextProb4;
+    public Text TextProb5;
     private int apuesta = 0;
     private string resultado;
 
@@ -187,7 +191,37 @@ public class Deck : MonoBehaviour
          * - Probabilidad de que el jugador obtenga entre un 17 y un 21 si pide una carta
          * - Probabilidad de que el jugador obtenga más de 21 si pide una carta          
          */
+
+        int cartastotal = 0;
+        float pplayer = player.GetComponent<CardHand>().points;
+        float mas21 = 0;
+        float entre17y21 = 0;
+        float dealermayorplayer = 0;
+
+        for (int i = cardIndex + 1; i <faces.Length; i++)
+        {
+            // Probabilidad de que el dealer tenga más puntuación que el jugador
+            cartastotal++;
+            if (values[3] + values[i] > pplayer)
+            {
+                dealermayorplayer++;
+            }
+            // Probabilidad de que el jugador obtenga entre un 17 y un 21 si pide una carta
+            if (values[i] + pplayer >= 17 && values[i] + pplayer <= 21)
+            {
+                entre17y21++;
+            }
+            // Probabilidad de que el jugador obtenga más de 21 si pide una carta
+            if (values[i] + pplayer > 21)
+            {
+                mas21++;
+            }
+        }
+        TextProb3.text = (dealermayorplayer/cartastotal).ToString();
+        TextProb4.text = (entre17y21/cartastotal).ToString();
+        TextProb5.text = (mas21/cartastotal).ToString();
     }
+
 
     void PushDealer()
     {
@@ -221,6 +255,7 @@ public class Deck : MonoBehaviour
         
         //Repartimos carta al jugador
         PushPlayer();
+        CalculateProbabilities();
 
         /*TODO:
          * Comprobamos si el jugador ya ha perdido y mostramos mensaje
@@ -319,6 +354,9 @@ public class Deck : MonoBehaviour
         finalMessage.text = "";
         PPoints.text = "";
         DPoints.text = "";
+        TextProb3.text = "";
+        TextProb4.text = "";
+        TextProb5.text = "";
         player.GetComponent<CardHand>().Clear();
         dealer.GetComponent<CardHand>().Clear();          
         cardIndex = 0;
