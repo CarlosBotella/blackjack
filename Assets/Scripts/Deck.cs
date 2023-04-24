@@ -1,10 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Purchasing;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Deck : MonoBehaviour
 {
+    public Text creditos;
+    public Dropdown creditosdrop;
     public Sprite[] faces;
     public GameObject dealer;
     public GameObject player;
@@ -15,21 +20,31 @@ public class Deck : MonoBehaviour
     public Text probMessage;
     public Text PPoints;
     public Text DPoints;
+    private int apuesta = 0;
+    private string resultado;
 
     public int[] values = new int[52];
     int cardIndex = 0;
     private int sum = 0;
-       
+    
     private void Awake()
-    {    
-        InitCardValues();        
-
+    {
+        
+        InitCardValues();
+        
     }
 
     private void Start()
     {
+        apuesta = 0;
+        hitButton.interactable = false;
+        stickButton.interactable = false;
         ShuffleCards();
-        StartGame();        
+        
+        
+        
+
+
     }
 
     private void InitCardValues()
@@ -92,26 +107,75 @@ public class Deck : MonoBehaviour
 
     void StartGame()
     {
-        for (int i = 0; i < 2; i++)
+        Debug.Log("startgame");
+        hitButton.interactable = true;
+        stickButton.interactable = true;
+        playAgainButton.interactable = false;
+        
+        switch (creditosdrop.value)
         {
-            PushPlayer();
-            PushDealer();
-            /*TODO:
-             * Si alguno de los dos obtiene Blackjack, termina el juego y mostramos mensaje
-             */
-            
+            case 0:
+                apuesta = 10;
+                break;
+            case 1:
+                apuesta = 20;
+                break;
+            case 2:
+                apuesta = 50;
+                break;
+            case 3:
+                apuesta = 100;
+                break;
         }
-        if (dealer.GetComponent<CardHand>().points == 21)
+        if (apuesta > Int64.Parse(creditos.text))
         {
-            finalMessage.text = "JUGADOR PIERDE";
+            finalMessage.text = "No puedes apostar tanto";
             hitButton.interactable = false;
             stickButton.interactable = false;
+            playAgainButton.interactable = true;
         }
-        if (player.GetComponent<CardHand>().points == 21)
+        else
         {
-            finalMessage.text = "JUGADOR GANA";
-            hitButton.interactable = false;
-            stickButton.interactable = false;
+            if (apuesta == 0)
+            {
+                finalMessage.text = "Tienes que apostar para jugar";
+                hitButton.interactable = false;
+                stickButton.interactable = false;
+                playAgainButton.interactable = true;
+            }
+            else
+            {
+
+                for (int i = 0; i < 2; i++)
+                {
+                    PushPlayer();
+                    PushDealer();
+                    /*TODO:
+                     * Si alguno de los dos obtiene Blackjack, termina el juego y mostramos mensaje
+                     */
+
+                }
+
+                if (dealer.GetComponent<CardHand>().points == 21)
+                {
+                    finalMessage.text = "JUGADOR PIERDE";
+                    hitButton.interactable = false;
+                    stickButton.interactable = false;
+                    playAgainButton.interactable = true;
+                    resultado = (Int64.Parse(creditos.text) - apuesta).ToString();
+                    creditos.text = resultado;
+                }
+
+                if (player.GetComponent<CardHand>().points == 21)
+                {
+                    finalMessage.text = "JUGADOR GANA";
+                    hitButton.interactable = false;
+                    stickButton.interactable = false;
+                    playAgainButton.interactable = true;
+                    resultado = (Int64.Parse(creditos.text) + apuesta * 2).ToString();
+                    creditos.text = resultado;
+                }
+            }
         }
     }
 
@@ -167,12 +231,18 @@ public class Deck : MonoBehaviour
             finalMessage.text = "JUGADOR PIERDE";
             hitButton.interactable = false;
             stickButton.interactable = false;
+            playAgainButton.interactable = true;
+            resultado = (Int64.Parse(creditos.text) - apuesta).ToString();
+            creditos.text = resultado;
         }
         if (player.GetComponent<CardHand>().points == 21)
         {
             finalMessage.text = "JUGADOR GANA";
             hitButton.interactable = false;
             stickButton.interactable = false;
+            playAgainButton.interactable = true;
+            resultado = (Int64.Parse(creditos.text) + apuesta * 2).ToString();
+            creditos.text = resultado;
         }
 
     }
@@ -201,6 +271,9 @@ public class Deck : MonoBehaviour
         {
             finalMessage.text = "JUGADOR GANA";
             Debug.Log(1);
+            playAgainButton.interactable = true;
+            resultado = (Int64.Parse(creditos.text) + apuesta * 2).ToString();
+            creditos.text = resultado;
         }
         else
         {
@@ -208,6 +281,7 @@ public class Deck : MonoBehaviour
             {
                 finalMessage.text = "EMPATE";
                 Debug.Log(2);
+                playAgainButton.interactable = true;
             }
             else
             {
@@ -216,11 +290,17 @@ public class Deck : MonoBehaviour
                 {
                     finalMessage.text = "JUGADOR GANA";
                     Debug.Log(3);
+                    playAgainButton.interactable = true;
+                    resultado = (Int64.Parse(creditos.text) + apuesta * 2).ToString();
+                    creditos.text = resultado;
                 }
                 else
                 {
                     finalMessage.text = "JUGADOR PIERDE";
                     Debug.Log(4);
+                    playAgainButton.interactable = true;
+                    resultado = (Int64.Parse(creditos.text) - apuesta).ToString();
+                    creditos.text = resultado;
                 }
             }
         }
